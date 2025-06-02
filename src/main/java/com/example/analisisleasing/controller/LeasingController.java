@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import com.example.analisisleasing.dto.DataLeasingDto;
+import com.example.analisisleasing.dto.IRRResult;
 import com.example.analisisleasing.dto.NpvResult;
 import com.example.analisisleasing.service.LeasingService;
 
@@ -32,19 +33,19 @@ public class LeasingController {
         System.out.println("===> MASUK KE METODE HITUNG");
 
         List<NpvResult> daftarNPV = leasingService.hitungNPV(dataLeasingDto);
-        double nilaiIRR = leasingService.hitungIRR(dataLeasingDto);
+        IRRResult hasilIRR = leasingService.hitungIRR(dataLeasingDto);
 
         DecimalFormat df = new DecimalFormat("#,###.##");
 
         List<NpvResult> daftarNPVFormatted = daftarNPV.stream()
                 .map(npv -> new NpvResult(
                         npv.getTingkatDiskonto(),
-                        Double.parseDouble(df.format(npv.getNilaiNPV()).replace(",", "")) 
-                ))
+                        Double.parseDouble(df.format(npv.getNilaiNPV()).replace(",", ""))))
                 .collect(Collectors.toList());
 
         model.addAttribute("npvList", daftarNPVFormatted);
-        model.addAttribute("irrFormatted", df.format(nilaiIRR));
+        model.addAttribute("irrFormatted", df.format(hasilIRR.getIrrPercent())); 
+        model.addAttribute("irrValueFormatted", df.format(hasilIRR.getNpv())); 
         model.addAttribute("hargaMotorFormatted", df.format(dataLeasingDto.getHargaMotor()));
         model.addAttribute("dpFormatted", df.format(dataLeasingDto.getDp()));
         model.addAttribute("cicilanFormatted", df.format(dataLeasingDto.getCicilan()));

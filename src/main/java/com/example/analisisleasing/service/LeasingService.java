@@ -6,9 +6,8 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.example.analisisleasing.dto.DataLeasingDto;
+import com.example.analisisleasing.dto.IRRResult;
 import com.example.analisisleasing.dto.NpvResult;
-
-
 
 @Service
 public class LeasingService {
@@ -22,13 +21,15 @@ public class LeasingService {
 
         double totalPembayaranAwal = hargaMotor - uangMuka;
 
-        // Hitung NPV untuk tingkat diskonto dari 10% sampai 50%
         for (int tingkat = 10; tingkat <= 50; tingkat += 5) {
-            double tingkatDiskonto = tingkat / 100.0;
+            double tingkatDiskontoTahunan = tingkat / 100.0;
+            double tingkatDiskontoBulanan = tingkatDiskontoTahunan / jumlahBulan;
+
             double npv = -totalPembayaranAwal;
 
             for (int bulan = 1; bulan <= jumlahBulan; bulan++) {
-                npv += cicilanBulanan / Math.pow(1 + tingkatDiskonto, bulan);
+                double pv = cicilanBulanan / Math.pow(1 + tingkatDiskontoBulanan, bulan);
+                npv += pv;
             }
 
             daftarHasilNPV.add(new NpvResult(tingkat, npv));
@@ -37,33 +38,27 @@ public class LeasingService {
         return daftarHasilNPV;
     }
 
-    // Hitung IRR 
-    public double hitungIRR(DataLeasingDto dataLeasing) {
-        double hargaMotor = dataLeasing.getHargaMotor();
-        double uangMuka = dataLeasing.getDp();
-        double cicilanBulanan = dataLeasing.getCicilan();
-        int jumlahBulan = dataLeasing.getJumlahBulan();
+public IRRResult hitungIRR(DataLeasingDto dataLeasing) {
+    double hargaMotor = dataLeasing.getHargaMotor();
+    double uangMuka = dataLeasing.getDp();
+    double cicilanBulanan = dataLeasing.getCicilan();
+    int jumlahBulan = dataLeasing.getJumlahBulan();
 
-        double totalPembayaranAwal = hargaMotor - uangMuka;
+    double totalPembayaranAwal = hargaMotor - uangMuka;
 
-        double tebakanAwal = 0.1;
-        double toleransi = 0.000001;
-        double selisih;
+    double tingkatDiskontoTahunan = 0.10; 
+    double tingkatDiskontoBulanan = tingkatDiskontoTahunan / jumlahBulan;
 
-        do {
-            double npv = -totalPembayaranAwal;
-            double turunanNPV = 0;
+    double totalPV = 0.0;
 
-            for (int bulan = 1; bulan <= jumlahBulan; bulan++) {
-                double diskonto = Math.pow(1 + tebakanAwal, bulan);
-                npv += cicilanBulanan / diskonto;
-                turunanNPV -= (bulan * cicilanBulanan) / Math.pow(1 + tebakanAwal, bulan + 1);
-            }
-
-            selisih = npv / turunanNPV;
-            tebakanAwal -= selisih;
-        } while (Math.abs(selisih) > toleransi);
-
-        return tebakanAwal * 100; // Hasil IRR dalam persen
+    for (int bulan = 1; bulan <= jumlahBulan; bulan++) {
+        double pv = cicilanBulanan / Math.pow(1 + tingkatDiskontoBulanan, bulan);
+        totalPV += pv;
     }
+
+    double irrNominal = totalPV - totalPembayaranAwal;
+    double irrPersentase = (irrNominal / totalPembayaranAwal) * 100;
+
+    return new IRRResult(irrPersentase, irrNominal);
+}
 }
