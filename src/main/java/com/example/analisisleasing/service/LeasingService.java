@@ -23,7 +23,7 @@ public class LeasingService {
 
         for (int tingkat = 10; tingkat <= 50; tingkat += 5) {
             double tebakanAwal = tingkat / 100.0;
-            double tingkatDiskontoBulanan = tebakanAwal / jumlahBulan;
+            double tingkatDiskontoBulanan = tebakanAwal / 12;
 
             double npv = -totalPembayaranAwal;
 
@@ -47,7 +47,7 @@ public IRRResult hitungIRR(DataLeasingDto dataLeasing) {
     double totalPembayaranAwal = hargaMotor - uangMuka;
 
     double tebakanAwal = 0.10; 
-    double tingkatDiskontoBulanan = tebakanAwal / jumlahBulan;
+    double tingkatDiskontoBulanan = tebakanAwal / 12;
 
     double totalPV = 0.0;
 
